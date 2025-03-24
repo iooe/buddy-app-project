@@ -1,0 +1,88 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String
+  name            String
+  major           String?
+  yearOfStudy     String?
+  bio             String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Отношения
+  courses         UserCourse[]
+  availability    Availability[]
+  preferences     UserPreference?
+  sentMessages    Message[]   @relation("MessageSender")
+  receivedMessages Message[]  @relation("MessageReceiver")
+}
+
+model UserPreference {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  groupSize         String  // "Individual", "Small", "Large"
+  studyStyle        String  // "Visual", "Reading", "Discussion"
+
+  // Отношение
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  name        String
+
+  // Отношения
+  users       UserCourse[]
+}
+
+model UserCourse {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+
+  // Отношения
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  userId    String
+  dayOfWeek Int      // 0 = Sunday, 6 = Saturday
+  startTime String   // "HH:MM" format
+  endTime   String   // "HH:MM" format
+
+  // Отношение
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  createdAt  DateTime @default(now())
+
+  // Отношения
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+
+// package.json - добавьте эти строки в секцию scripts
+// "prisma:generate": "prisma generate",
+// "prisma:migrate": "prisma migrate dev",
+// "prisma:seed": "node prisma/seed.js"
