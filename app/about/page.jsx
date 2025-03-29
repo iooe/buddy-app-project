@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Sidebar from "@/components/ui/Sidebar";
 import Header from "@/components/ui/Header";
@@ -10,7 +12,7 @@ export default function AboutPage() {
 
             <div className="flex">
                 {/* Sidebar */}
-                <Sidebar/>
+                <Sidebar activePage="/about"/>
 
                 {/* Main Content */}
                 <div className="flex-1 w-max max-w-5xl p-6 bg-gray-100">
