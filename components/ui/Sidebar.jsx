@@ -1,18 +1,18 @@
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 
-export default function Sidebar({ activePage }) {
+export default function Sidebar({activePage}) {
     const pathname = usePathname();
 
     // Define navigation items with paths
     const navItems = [
-        { name: "Dashboard", path: "/dashboard" },
-        { name: "Partners", path: "/partners" },
-        { name: "Courses", path: "/courses" },
-        { name: "Messages", path: "/messages" },
-        { name: "Profile", path: "/profile" },
-        { name: "About Project", path: "/about" }
+        {name: "Dashboard", path: "/dashboard"},
+        {name: "Partners", path: "/partners"},
+        {name: "Courses", path: "/courses"},
+        {name: "Messages", path: "/messages"},
+        {name: "Profile", path: "/profile"},
+        {name: "About Project", path: "/about"}
     ];
 
     // Function to determine if a nav item is active
@@ -23,6 +23,24 @@ export default function Sidebar({ activePage }) {
         }
         // Otherwise use the current pathname
         return pathname === path;
+    };
+
+    const logout = async () => {
+        try {
+            // Import signOut dynamically to avoid issues
+            const { signOut } = await import("next-auth/react");
+
+            // Use the signOut function from next-auth/react
+            await signOut({
+                redirect: false,
+                callbackUrl: "/"
+            });
+
+            // Force reload the page to ensure all state is cleared
+            window.location.href = "/";
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     return (
@@ -43,11 +61,12 @@ export default function Sidebar({ activePage }) {
                 ))}
 
                 <div className="mt-auto p-4">
-                    <Link href="/logout">
-                        <button className="w-full bg-red-100 text-red-500 py-2 rounded hover:bg-red-200 transition-colors duration-200">
-                            Exit
-                        </button>
-                    </Link>
+                    <button
+                        onClick={logout}
+                        className="w-full bg-red-100 text-red-500 py-2 rounded hover:bg-red-200 transition-colors duration-200">
+                        Exit
+                    </button>
+
                 </div>
             </nav>
         </div>
