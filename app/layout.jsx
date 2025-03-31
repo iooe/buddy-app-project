@@ -1,16 +1,15 @@
-import { Inter } from 'next/font/google';
+import {Inter} from 'next/font/google';
 import './globals.css';
-import Link from 'next/link';
 import SessionProvider from '../components/providers/SessionProvider';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({subsets: ['latin']});
 
 export const metadata = {
-    title: 'Study Buddy - Найдите идеального партнера для учебы',
-    description: 'Платформа для поиска партнеров для совместной учебы на основе общих курсов и предпочтений',
+    title: 'Study Buddy - Find the perfect study partner',
+    description: 'Platform for finding study partners based on common courses and preferences',
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({children}) {
     return (
         <html lang="en">
         <body className={inter.className}>
