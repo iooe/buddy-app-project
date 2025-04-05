@@ -1,34 +1,12 @@
-// app/courses/page.tsx
-"use client";
+'use client';
 
-import Link from "next/link";
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-
-
-// Sample Data (Replace with actual data fetching/management)
-const allAvailableCourses = [
-    { code: "BIO101", title: "Introduction to Biology" },
-    { code: "CHEM101", title: "General Chemistry" },
-    { code: "CS101", title: "Introduction to Programming" },
-    { code: "CS201", title: "Data Structures" },
-    { code: "ECON101", title: "Principles of Economics" },
-    { code: "ENG101", title: "English Composition" },
-    { code: "HIST101", title: "World History" },
-    { code: "MATH121", title: "Calculus I" },
-    { code: "PHYS101", title: "Introduction to Physics" },
-    { code: "PSY101", title: "Introduction to Psychology" },
-];
-
-// Initial courses the user already has (example)
-const initialUserCourses = [
-    { code: "MATH121", title: "Calculus I" },
-    { code: "CS101", title: "Intro to Programming" }, // Corrected title slightly to match image more closely
-];
-
+import Header from '@/components/ui/Header';
+import Sidebar from '@/components/ui/Sidebar';
 
 export default function CoursesPage() {
-/*    const { data: session } = useSession();
+    const { data: session } = useSession();
     const [courses, setCourses] = useState([]);
     const [userCourses, setUserCourses] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState('');
@@ -126,9 +104,9 @@ export default function CoursesPage() {
             console.error('Error removing course:', err);
             setError(err.message);
         }
-    };*/
+    };
 
-/*    if (!session) {
+    if (!session) {
         return (
             <div className="min-h-screen bg-gray-100">
                 <Header />
@@ -142,171 +120,113 @@ export default function CoursesPage() {
                 </div>
             </div>
         );
-    }*/
-
-    // State for the user's current courses
-    const [userCourses, setUserCourses] = useState(initialUserCourses);
-    // State for the course selected in the dropdown
-    const [selectedCourseCode, setSelectedCourseCode] = useState("");
-
-    // Calculate courses available to add (those not already in userCourses)
-    const coursesToAdd = useMemo(() => {
-        const userCourseCodes = new Set(userCourses.map(course => course.code));
-        return allAvailableCourses.filter(course => !userCourseCodes.has(course.code));
-    }, [userCourses]); // Recalculate when userCourses changes
-
-    // Function to handle removing a course
-    const handleRemoveCourse = (courseCodeToRemove) => {
-        setUserCourses(currentCourses =>
-            currentCourses.filter(course => course.code !== courseCodeToRemove)
-        );
-        // Optionally, if you want the removed course to immediately reappear in dropdown:
-        // No extra action needed here because `coursesToAdd` recalculates automatically.
-    };
-
-    // Function to handle adding the selected course
-    const handleAddCourse = () => {
-        if (!selectedCourseCode) return; // Do nothing if no course is selected
-
-        const courseToAdd = allAvailableCourses.find(course => course.code === selectedCourseCode);
-
-        if (courseToAdd && !userCourses.some(c => c.code === courseToAdd.code)) {
-            setUserCourses(currentCourses => [...currentCourses, courseToAdd]);
-            setSelectedCourseCode(""); // Reset dropdown after adding
-        }
-    };
-
-    // Function to handle dropdown selection change
-    const handleSelectChange = (event) => {
-        setSelectedCourseCode(event.target.value);
-    };
-
-
-    // Example function for handling exit/logout (reuse or move to a layout component)
-    const handleExit = async () => {
-        console.log("Exit clicked - implement logout logic here");
-    };
+    }
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100">
             {/* Header */}
-            <header className="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
-                <div className="flex items-center space-x-2">
-                    <span className="bg-white text-blue-600 rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">SB</span>
-                    <h1 className="text-xl font-semibold">Study Buddy</h1>
-                </div>
-                <button className="bg-white text-gray-700 rounded-full h-8 w-16 flex items-center justify-center text-sm hover:bg-gray-200">
-                    User {/* Replace with actual user info/icon */}
-                </button>
-            </header>
+            <Header />
 
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex">
                 {/* Sidebar */}
-                <aside className="w-64 bg-gray-50 p-4 flex flex-col justify-between border-r border-gray-200">
-                    <nav>
-                        <ul>
-                            <li className="mb-2">
-                                <Link href="/dashboard" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Dashboard
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/partners" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Partners
-                                </Link>
-                            </li>
-                            {/* Active state applied to Courses */}
-                            <li className="mb-2">
-                                <Link href="/courses" className="flex items-center p-2 rounded-md bg-blue-100 text-blue-700 font-semibold">
-                                    <span className="mr-3 h-5 w-5"></span> Courses
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/messages" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Messages
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/profile" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Profile
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/about" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> About Project
-                                </Link>
-                            </li>
-                        </ul>
-                    </nav>
-                    {/* Exit Button */}
-                    <div>
-                        <button
-                            onClick={handleExit}
-                            className="w-full flex items-center justify-center p-2 rounded-md text-red-700 bg-red-100 hover:bg-red-200 font-medium"
-                        >
-                            <span className="mr-3 h-5 w-5"></span> Exit
-                        </button>
-                    </div>
-                </aside>
+                <Sidebar activePage="/courses" />
 
                 {/* Main Content */}
-                <main className="flex-1 p-8 overflow-y-auto bg-white">
-                    <h2 className="text-3xl font-bold mb-8 text-gray-800">Courses Management</h2>
+                <div className="flex-1 w-max max-w-5xl p-6 bg-gray-100">
+                    <h1 className="text-xl font-semibold mb-6">Courses Management</h1>
 
-                    {/* Your Courses Section */}
-                    <section className="mb-10 bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h3 className="text-xl font-semibold text-gray-700 mb-4">Your Courses</h3>
-                        {userCourses.length > 0 ? (
-                            <div className="space-y-3">
-                                {userCourses.map((course) => (
-                                    <div key={course.code} className="flex justify-between items-center p-3 bg-blue-50 rounded-md border border-blue-100">
-                                        <span className="text-gray-800 font-medium">
-                                            {course.code} - {course.title}
-                                        </span>
-                                        <button
-                                            onClick={() => handleRemoveCourse(course.code)}
-                                            className="text-red-600 bg-white border border-red-300 hover:bg-red-50 px-3 py-1 rounded-md text-sm font-medium"
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-500">You haven't added any courses yet.</p>
-                        )}
-                    </section>
-
-                    {/* Add a New Course Section */}
-                    <section className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h3 className="text-xl font-semibold text-gray-700 mb-4">Add a New Course</h3>
-                        <div className="flex items-center space-x-4">
-                            <select
-                                value={selectedCourseCode}
-                                onChange={handleSelectChange}
-                                className="block w-full md:w-1/2 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700"
-                            >
-                                <option value="">Select a course...</option>
-                                {coursesToAdd.map((course) => (
-                                    <option key={course.code} value={course.code}>
-                                        {course.code} - {course.title}
-                                    </option>
-                                ))}
-                            </select>
-                            <button
-                                onClick={handleAddCourse}
-                                disabled={!selectedCourseCode} // Disable button if no course is selected
-                                className={`px-4 py-2 rounded-md text-sm font-medium text-white 
-                                            ${!selectedCourseCode ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
-                            >
-                                Add Course
-                            </button>
+                    {/* Error message */}
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+                            {error}
                         </div>
-                        {coursesToAdd.length === 0 && userCourses.length > 0 && (
-                            <p className="text-sm text-gray-500 mt-4">You have added all available courses.</p>
-                        )}
-                    </section>
-                </main>
+                    )}
+
+                    {/* Success message */}
+                    {message && (
+                        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
+                            {message}
+                        </div>
+                    )}
+
+                    {/* Loading indicator */}
+                    {loading ? (
+                        <div className="bg-white rounded-lg p-6 mb-6 flex justify-center items-center">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mr-3"></div>
+                            <p>Loading courses...</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Your Courses Section */}
+                            <div className="bg-white rounded-lg p-6 mb-6">
+                                <h2 className="text-lg font-medium mb-4">Your Courses</h2>
+
+                                {userCourses.length === 0 ? (
+                                    <p className="text-gray-600">You haven't added any courses yet.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {userCourses.map(course => (
+                                            <div key={course.id} className="flex justify-between items-center bg-blue-50 p-4 rounded">
+                                                <div>
+                                                    <div className="font-medium">{course.code}</div>
+                                                    <div className="text-sm text-gray-600">{course.name}</div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleRemoveCourse(course.id)}
+                                                    className="px-3 py-1 border border-red-300 text-red-500 rounded hover:bg-red-50"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Add New Course Section */}
+                            <div className="bg-white rounded-lg p-6 mb-6">
+                                <h2 className="text-lg font-medium mb-4">Add a New Course</h2>
+
+                                <div className="flex gap-4 items-center">
+                                    <div className="flex-1 relative">
+                                        <div className="absolute left-3 top-3 flex items-center text-blue-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="11" cy="11" r="8"></circle>
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            </svg>
+                                        </div>
+                                        <select
+                                            value={selectedCourse}
+                                            onChange={(e) => setSelectedCourse(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-2 border rounded appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">Select a course</option>
+                                            {courses
+                                                .filter(course => !userCourses.some(uc => uc.id === course.id))
+                                                .map(course => (
+                                                    <option key={course.id} value={course.id}>
+                                                        {course.code}: {course.name}
+                                                    </option>
+                                                ))
+                                            }
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={handleAddCourse}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        disabled={!selectedCourse}
+                                    >
+                                        Add Course
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    <div className="text-center text-gray-500 text-sm">
+                        © 2023 Study Buddy. All rights reserved.
+                    </div>
+                </div>
             </div>
         </div>
     );
