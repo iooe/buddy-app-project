@@ -1,4 +1,3 @@
-// app/api/matches/route.js - Matching Algorithm
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
