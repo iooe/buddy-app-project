@@ -1,51 +1,51 @@
-// app/partners/page.tsx
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-// import { useSession, signOut } from "next-auth/react"; // Import if using next-auth
-// import { useRouter } from "next/navigation"; // Import if navigation logic is needed
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function PartnersPage() {
-    // Example partners data - replace with actual data fetching later
-    const partners = [
-        {
-            id: "john_doe",
-            name: "John Doe",
-            details: "Computer Science, 2nd year",
-            compatibility: 100,
-            sharedCourses: ["MATH101: Calculus I"],
-        },
-        {
-            id: "vlad2",
-            name: "vlad2", // Assuming 'vlad2' is a username/name
-            details: "Computing, 2nd year",
-            compatibility: 100,
-            sharedCourses: ["MATH101: Calculus I"],
-        },
-        {
-            id: "alice_smith",
-            name: "Alice Smith",
-            details: "Physics, 3rd year",
-            compatibility: 85,
-            sharedCourses: ["MATH101: Calculus I"],
-        },
-        { // Added another partner for list demonstration
-            id: "emma_wilson",
-            name: "Emma Wilson",
-            details: "Economics, 4th year",
-            compatibility: 85,
-            sharedCourses: ["ECON101: Principles of Economics", "MATH101: Calculus I"],
-        },
-    ];
+    const [partners, setPartners] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const { data: session } = useSession();
+    const router = useRouter();
 
-    // const { data: session, status } = useSession(); // Uncomment if using next-auth
-    // const router = useRouter(); // Uncomment if using router
+    useEffect(() => {
+        // Fetch potential matches from the API
+        const fetchPartners = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/matches');
 
-    // Example function for handling exit/logout (reuse or move to a layout component)
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setPartners(data);
+            } catch (err) {
+                console.error("Failed to fetch partners:", err);
+                setError("Failed to load study partners. Please try again later.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session) {
+            fetchPartners();
+        }
+    }, [session]);
+
+    // Handle logout function
     const handleExit = async () => {
-        // await signOut({ redirect: true, callbackUrl: '/' }); // Example using next-auth signOut
-        console.log("Exit clicked - implement logout logic here");
-        // router.push('/'); // Redirect to home or login page after logout
+        try {
+            await signOut({ redirect: false });
+            router.push('/login');
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     return (
@@ -53,15 +53,17 @@ export default function PartnersPage() {
             {/* Header */}
             <header className="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
                 <div className="flex items-center space-x-2">
-                    <span className="bg-white text-blue-600 rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">SB</span>
-                    <h1 className="text-xl font-semibold">Study Buddy</h1>
+                    <Link href="/dashboard" className="flex items-center space-x-2">
+                        <span className="bg-white text-blue-600 rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">SB</span>
+                        <h1 className="text-xl font-semibold">Study Buddy</h1>
+                    </Link>
                 </div>
-                <button className="bg-white text-gray-700 rounded-full h-8 w-16 flex items-center justify-center text-sm hover:bg-gray-200">
-                    User {/* Replace with actual user info/icon */}
-                </button>
+                <Link href="/profile" className="bg-white text-gray-700 rounded-full h-8 px-4 flex items-center justify-center text-sm hover:bg-gray-200">
+                    {session?.user?.name || "User"}
+                </Link>
             </header>
 
-            <div className="flex flex-1 overflow-hidden"> {/* Ensure main content area grows and handles overflow */}
+            <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar */}
                 <aside className="w-64 bg-gray-50 p-4 flex flex-col justify-between border-r border-gray-200">
                     <nav>
@@ -111,53 +113,115 @@ export default function PartnersPage() {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 p-8 overflow-y-auto bg-white"> {/* Allow scrolling within main content */}
+                <main className="flex-1 p-8 overflow-y-auto bg-white">
                     <h2 className="text-3xl font-bold mb-8 text-gray-800">Find Study Partners</h2>
 
-                    {/* Find Study Partners Section */}
-                    <section className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h3 className="text-xl font-semibold text-gray-700 mb-4">Find Study Partners</h3>
-                        <div className="space-y-4"> {/* Added space-y for vertical spacing between entries */}
-                            {partners.map((partner, index) => (
-                                <div
-                                    key={partner.id}
-                                    className={`flex flex-col md:flex-row justify-between md:items-start py-4 ${index < partners.length - 1 ? 'border-b border-gray-200' : ''}`}
-                                >
-                                    {/* Partner Info */}
-                                    <div className="mb-4 md:mb-0">
-                                        <p className="font-semibold text-lg text-gray-800">{partner.name}</p>
-                                        <p className="text-sm text-gray-500 mb-2">{partner.details}</p>
-                                        <p className="text-sm font-medium text-gray-600">Shared Courses:</p>
-                                        <ul className="list-disc list-inside text-sm text-gray-500 space-y-1 mt-1 ml-4">
-                                            {partner.sharedCourses.map((course, courseIndex) => (
-                                                <li key={courseIndex}>{course}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
+                    {/* Loading state */}
+                    {loading && (
+                        <div className="flex justify-center items-center h-60">
+                            <p className="text-gray-600">Loading potential study partners...</p>
+                        </div>
+                    )}
 
-                                    {/* Compatibility & Actions */}
-                                    {/* Adjusted alignment for medium screens and up */}
-                                    <div className="flex flex-col items-start md:items-end space-y-2 md:space-y-0 md:flex-row md:items-center md:space-x-6 mt-2 md:mt-0">
-                                        <span className="text-sm text-gray-600 whitespace-nowrap">Compatibility: {partner.compatibility}%</span>
-                                        <div className="flex items-center space-x-4">
-                                            {/* Message Link */}
-                                            <Link href={`/messages/${partner.id}`} // Use partner ID for unique routing
-                                                  className="text-sm text-blue-600 hover:underline">
-                                                Message
-                                            </Link>
-                                            {/* Profile Button */}
-                                            <Link href={`/partners/${partner.id}`} // Use partner ID for unique routing
-                                                  className="bg-blue-500 text-white px-4 py-1 rounded-md text-sm font-medium hover:bg-blue-600">
-                                                Profile
-                                            </Link>
+                    {/* Error state */}
+                    {error && (
+                        <div className="bg-red-50 p-4 rounded-lg border border-red-200 text-red-700">
+                            <p>{error}</p>
+                        </div>
+                    )}
+
+                    {/* No partners found */}
+                    {!loading && !error && partners.length === 0 && (
+                        <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+                            <h3 className="text-lg font-medium text-yellow-800 mb-2">No study partners found</h3>
+                            <p className="text-yellow-700">
+                                Add more courses to your profile to find potential study partners with similar interests.
+                            </p>
+                            <Link
+                                href="/profile#courses"
+                                className="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600"
+                            >
+                                Add Courses
+                            </Link>
+                        </div>
+                    )}
+
+                    {/* Partners list */}
+                    {!loading && !error && partners.length > 0 && (
+                        <section className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 className="text-xl font-semibold text-gray-700 mb-4">Recommended Study Partners</h3>
+                            <div className="space-y-4">
+                                {partners.map((partner, index) => (
+                                    <div
+                                        key={partner.id}
+                                        className={`flex flex-col md:flex-row justify-between md:items-start py-4 ${index < partners.length - 1 ? 'border-b border-gray-200' : ''}`}
+                                    >
+                                        {/* Partner Info */}
+                                        <div className="mb-4 md:mb-0">
+                                            <p className="font-semibold text-lg text-gray-800">{partner.name}</p>
+                                            <p className="text-sm text-gray-500 mb-2">
+                                                {partner.major || "Major not specified"}
+                                                {partner.yearOfStudy ? `, ${partner.yearOfStudy}${getYearSuffix(partner.yearOfStudy)} year` : ""}
+                                            </p>
+                                            <p className="text-sm font-medium text-gray-600">Shared Courses:</p>
+                                            <ul className="list-disc list-inside text-sm text-gray-500 space-y-1 mt-1 ml-4">
+                                                {partner.sharedCourses.map((course) => (
+                                                    <li key={course.id}>{course.code}: {course.name}</li>
+                                                ))}
+                                            </ul>
+
+                                            {/* Display study preferences if available */}
+                                            {partner.preferences && (
+                                                <div className="mt-2">
+                                                    <p className="text-sm font-medium text-gray-600">Study Preferences:</p>
+                                                    <ul className="list-disc list-inside text-sm text-gray-500 mt-1 ml-4">
+                                                        {partner.preferences.groupSize && (
+                                                            <li>Group Size: {partner.preferences.groupSize}</li>
+                                                        )}
+                                                        {partner.preferences.studyStyle && (
+                                                            <li>Study Style: {partner.preferences.studyStyle}</li>
+                                                        )}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Compatibility & Actions */}
+                                        <div className="flex flex-col items-start md:items-end space-y-2 md:space-y-0 md:flex-row md:items-center md:space-x-6 mt-2 md:mt-0">
+                                            <div className="bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                                                <span className="text-sm font-medium text-blue-800">
+                                                    {partner.matchPercentage}% Match
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-4">
+                                                {/* Message Link */}
+                                                <Link href={`/messages/${partner.id}`}
+                                                      className="text-sm text-blue-600 hover:underline">
+                                                    Message
+                                                </Link>
+                                                {/* Profile Button */}
+                                                <Link href={`/partners/${partner.id}`}
+                                                      className="bg-blue-500 text-white px-4 py-1 rounded-md text-sm font-medium hover:bg-blue-600">
+                                                    Profile
+                                                </Link>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </main>
             </div>
         </div>
     );
+}
+
+// Helper function to get the correct suffix for year of study
+function getYearSuffix(year) {
+    const yearNum = parseInt(year);
+    if (yearNum === 1) return "st";
+    if (yearNum === 2) return "nd";
+    if (yearNum === 3) return "rd";
+    return "th";
 }
