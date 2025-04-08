@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { signIn } from 'next-auth/react';
 
 export default function Register() {
     const router = useRouter();
+    // Form state for registration data
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -13,16 +15,30 @@ export default function Register() {
         major: '',
         yearOfStudy: '',
     });
+    // Error state for validation messages
     const [error, setError] = useState('');
+    // Loading state for form submission
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Handle input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setIsSubmitting(true);
+
         try {
+            // Validate required fields
+            if (!formData.name || !formData.email || !formData.password) {
+                throw new Error('Name, email and password are required');
+            }
+
+            // Send registration request to API
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
@@ -31,111 +47,61 @@ export default function Register() {
                 body: JSON.stringify(formData),
             });
 
+            // Handle API errors
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.message || 'Ошибка регистрации');
+                throw new Error(data.message || 'Registration error');
             }
 
-            router.push('/login');
+            // Automatically sign in after successful registration
+            const signInResult = await signIn('credentials', {
+                email: formData.email,
+                password: formData.password,
+                redirect: false, // Prevent NextAuth from redirecting
+            });
+
+            // Handle sign-in errors
+            if (signInResult?.error) {
+                throw new Error(signInResult.error || 'Login failed after registration');
+            }
+
+            // Redirect to dashboard/home page after successful login
+            router.push('/dashboard'); // Or any other page you want to redirect to
+
         } catch (err) {
             setError(err.message);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-       /* <div className="max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Регистрация</h1>
-
-            {error && <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">{error}</div>}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block mb-1">Имя</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                        className="w-full border p-2 rounded"
-                    />
-                </div>
-
-                <div>
-                    <label className="block mb-1">Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full border p-2 rounded"
-                    />
-                </div>
-
-                <div>
-                    <label className="block mb-1">Пароль</label>
-                    <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        className="w-full border p-2 rounded"
-                    />
-                </div>
-
-                <div>
-                    <label className="block mb-1">Специальность</label>
-                    <input
-                        type="text"
-                        name="major"
-                        value={formData.major}
-                        onChange={handleChange}
-                        className="w-full border p-2 rounded"
-                    />
-                </div>
-
-                <div>
-                    <label className="block mb-1">Год обучения</label>
-                    <select
-                        name="yearOfStudy"
-                        value={formData.yearOfStudy}
-                        onChange={handleChange}
-                        className="w-full border p-2 rounded"
-                    >
-                        <option value="">Выберите год</option>
-                        <option value="1">1 курс</option>
-                        <option value="2">2 курс</option>
-                        <option value="3">3 курс</option>
-                        <option value="4">4 курс</option>
-                    </select>
-                </div>
-
-                <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded">
-                    Зарегистрироваться
-                </button>
-            </form>
-
-            <p className="mt-4 text-center">
-                Уже есть аккаунт? <Link href="/login" className="text-blue-600">Войти</Link>
-            </p>
-        </div>*/
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             {/* Form Container */}
             <div className="bg-white shadow-md rounded-lg p-6 w-96">
                 {/* Title */}
                 <h1 className="text-2xl font-bold text-black text-center mb-6">Registration</h1>
 
+                {/* Error Display */}
+                {error && (
+                    <div className="bg-red-100 text-red-700 p-3 mb-4 rounded text-sm">
+                        {error}
+                    </div>
+                )}
+
                 {/* Form Fields */}
-                <form className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Name Field */}
                     <div>
                         <label className="block text-black text-sm font-medium mb-1">Name</label>
                         <input
                             type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            required
                             className="w-full border border-gray-300 rounded-md p-2"
-                            placeholder=""
+                            placeholder="Enter your name"
                         />
                     </div>
 
@@ -144,8 +110,12 @@ export default function Register() {
                         <label className="block text-black text-sm font-medium mb-1">Email</label>
                         <input
                             type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
                             className="w-full border border-gray-300 rounded-md p-2"
-                            placeholder=""
+                            placeholder="Enter your email"
                         />
                     </div>
 
@@ -154,38 +124,59 @@ export default function Register() {
                         <label className="block text-black text-sm font-medium mb-1">Password</label>
                         <input
                             type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
                             className="w-full border border-gray-300 rounded-md p-2"
-                            placeholder=""
+                            placeholder="Create a password"
                         />
                     </div>
 
-                    {/* Specialty Field */}
+                    {/* Major/Specialty Field */}
                     <div>
                         <label className="block text-black text-sm font-medium mb-1">Specialty</label>
                         <input
                             type="text"
+                            name="major"
+                            value={formData.major}
+                            onChange={handleChange}
                             className="w-full border border-gray-300 rounded-md p-2"
-                            placeholder=""
+                            placeholder="Enter your specialty (optional)"
                         />
                     </div>
 
                     {/* Year of Study Field (Dropdown) */}
                     <div>
                         <label className="block text-black text-sm font-medium mb-1">Year of Study</label>
-                        <select className="w-full border border-gray-300 rounded-md p-2 text-gray-500">
+                        <select
+                            name="yearOfStudy"
+                            value={formData.yearOfStudy}
+                            onChange={handleChange}
+                            className="w-full border border-gray-300 rounded-md p-2 text-gray-700"
+                        >
                             <option value="">Select Year</option>
-                            {/* Add additional options here as needed, e.g., <option value="1">1</option> */}
+                            <option value="1">1st year</option>
+                            <option value="2">2nd year</option>
+                            <option value="3">3rd year</option>
+                            <option value="4">4th year</option>
                         </select>
                     </div>
 
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-blue-500 text-white rounded-md py-2 mt-4 hover:bg-blue-600"
+                        disabled={isSubmitting}
+                        className="w-full bg-blue-500 text-white rounded-md py-2 mt-4 hover:bg-blue-600 disabled:bg-blue-300"
                     >
-                        REGISTER
+                        {isSubmitting ? 'REGISTERING...' : 'REGISTER'}
                     </button>
                 </form>
+
+                {/* Login Link */}
+                <p className="mt-4 text-center text-sm">
+                    Already have an account? <Link href="/login" className="text-blue-600 hover:underline">Log in</Link>
+                </p>
             </div>
         </div>
     );
