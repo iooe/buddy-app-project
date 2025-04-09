@@ -13,3 +13,7 @@ body {
     color: rgb(var(--foreground-rgb));
     background: rgb(var(--background-rgb));
 }
+
+.w-48.bg-white {
+    min-height: calc(100vh - 60px);
+}

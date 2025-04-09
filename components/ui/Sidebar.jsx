@@ -45,7 +45,7 @@ export default function Sidebar({activePage}) {
     };
 
     return (
-        <div className="w-48 bg-white max-h-screen">
+        <div className="w-48 bg-white">
             <nav className="py-4 flex flex-col h-full">
                 {navItems.map((item) => (
                     <Link
