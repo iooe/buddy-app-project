@@ -1,4 +1,3 @@
-// app/api/users/[userId]/route.js - Профиль конкретного пользователя
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
@@ -9,7 +8,7 @@ export async function GET(request, { params }) {
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json(
-                { message: 'Не авторизован' },
+                { message: 'Not authorized' },
                 { status: 401 }
             );
         }
@@ -27,19 +26,19 @@ export async function GET(request, { params }) {
 
         if (!user) {
             return NextResponse.json(
-                { message: 'Пользователь не найден' },
+                { message: 'User not found' },
                 { status: 404 }
             );
         }
 
-        // Удаляем пароль из ответа
+        // Remove password from the response
         const { password, ...userWithoutPassword } = user;
 
         return NextResponse.json(userWithoutPassword);
     } catch (error) {
-        console.error('Ошибка получения пользователя:', error);
+        console.error('Error retrieving user:', error);
         return NextResponse.json(
-            { message: 'Произошла ошибка при получении данных пользователя' },
+            { message: 'An error occurred while retrieving user data' },
             { status: 500 }
         );
     }

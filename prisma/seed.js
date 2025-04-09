@@ -1,14 +1,12 @@
-
-// prisma/seed.js
 const { PrismaClient } = require('@prisma/client');
 const { hash } = require('bcrypt');
 
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log('Начинаем заполнение базы данных...');
+    console.log('Starting database seeding...');
 
-    // Создаем курсы
+    // Creating courses
     const courses = [
         { code: 'MATH101', name: 'Calculus I' },
         { code: 'PHYS101', name: 'Introduction to Physics' },
@@ -22,7 +20,7 @@ async function main() {
         { code: 'PSY101', name: 'Introduction to Psychology' },
     ];
 
-    console.log('Создаем курсы...');
+    console.log('Creating courses...');
     for (const course of courses) {
         await prisma.course.upsert({
             where: { code: course.code },
@@ -31,7 +29,7 @@ async function main() {
         });
     }
 
-    // Создаем тестовых пользователей
+    // Creating test users
     const users = [
         {
             email: 'john@example.com',
@@ -125,11 +123,11 @@ async function main() {
         },
     ];
 
-    console.log('Создаем пользователей...');
+    console.log('Creating users...');
     for (const userData of users) {
         const { email, name, password, major, yearOfStudy, bio, preferences, courses, availability } = userData;
 
-        // Создаем пользователя
+        // Creating user
         const user = await prisma.user.upsert({
             where: { email },
             update: {},
@@ -143,7 +141,7 @@ async function main() {
             },
         });
 
-        // Создаем предпочтения
+        // Creating preferences
         await prisma.userPreference.upsert({
             where: { userId: user.id },
             update: preferences,
@@ -153,7 +151,7 @@ async function main() {
             },
         });
 
-        // Добавляем курсы
+        // Adding courses
         for (const courseCode of courses) {
             const course = await prisma.course.findUnique({
                 where: { code: courseCode },
@@ -176,7 +174,7 @@ async function main() {
             }
         }
 
-        // Добавляем доступность
+        // Adding availability
         for (const slot of availability) {
             await prisma.availability.create({
                 data: {
@@ -187,8 +185,8 @@ async function main() {
         }
     }
 
-    // Создаем некоторые сообщения между пользователями
-    console.log('Создаем сообщения...');
+    // Creating some messages between users
+    console.log('Creating messages...');
 
     const john = await prisma.user.findUnique({ where: { email: 'john@example.com' } });
     const alice = await prisma.user.findUnique({ where: { email: 'alice@example.com' } });
@@ -198,38 +196,38 @@ async function main() {
         {
             senderId: john.id,
             receiverId: alice.id,
-            content: 'Привет! Хочешь позаниматься вместе по матану?',
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 дня назад
+            content: 'Hi! Do you want to study calculus together?',
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
         },
         {
             senderId: alice.id,
             receiverId: john.id,
-            content: 'Привет! Да, конечно! Когда тебе удобно?',
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000), // 3 дня назад + 30 минут
+            content: 'Hi! Yes, of course! When is convenient for you?',
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000), // 3 days ago + 30 minutes
         },
         {
             senderId: john.id,
             receiverId: alice.id,
-            content: 'Может в понедельник в 10:00?',
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000), // 3 дня назад + 45 минут
+            content: 'How about Monday at 10:00?',
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000), // 3 days ago + 45 minutes
         },
         {
             senderId: alice.id,
             receiverId: john.id,
-            content: 'Отлично! Давай встретимся в библиотеке.',
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000), // 3 дня назад + 1 час
+            content: 'Great! Let\'s meet at the library.',
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000), // 3 days ago + 1 hour
         },
         {
             senderId: bob.id,
             receiverId: john.id,
-            content: 'Привет! Слышал, ты хорошо разбираешься в программировании. Можешь помочь мне с заданием?',
-            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 день назад
+            content: 'Hi! I heard you\'re good at programming. Can you help me with an assignment?',
+            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
         },
         {
             senderId: john.id,
             receiverId: bob.id,
-            content: 'Привет! Конечно, могу помочь. Что у тебя за задание?',
-            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 20 * 60 * 1000), // 1 день назад + 20 минут
+            content: 'Hi! Of course, I can help. What\'s your assignment?',
+            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 20 * 60 * 1000), // 1 day ago + 20 minutes
         },
     ];
 
@@ -239,7 +237,7 @@ async function main() {
         });
     }
 
-    console.log('Заполнение базы данных завершено!');
+    console.log('Database seeding completed!');
 }
 
 main()
