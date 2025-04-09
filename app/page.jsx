@@ -1,8 +1,8 @@
-"use client";
+"use client"; 
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 export default function Auth() {
     const { data: session, status } = useSession();

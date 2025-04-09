@@ -4,77 +4,95 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-
-// Sample Data Store (Replace with actual data fetching/management)
-const allConversations= {
-    "vlad2": {
-        partnerName: "Vlad",
-        messages: [
-            { id: 1, text: "Hello Vlad", timestamp: "17:55", sender: 'other' },
-            { id: 2, text: "Hey, let's study together!", timestamp: "18:00", sender: 'self' },
-            { id: 3, text: "Sure, sounds good!", timestamp: "18:05", sender: 'other' },
-        ]
-    },
-    "john_doe": {
-        partnerName: "John Doe",
-        messages: [
-            { id: 4, text: "Can we meet today?", timestamp: "10:15", sender: 'other' },
-            { id: 5, text: "Yes, how about 3 PM at the library?", timestamp: "10:18", sender: 'self' },
-        ]
-    },
-    "emma_wilson": {
-        partnerName: "Emma",
-        messages: [
-            { id: 6, text: "Shared notes for Calculus", timestamp: "09:40", sender: 'other' },
-        ]
-    },
-    // Add more conversations as needed
-};
+import Sidebar from "@/components/ui/Sidebar";
+import Header from "@/components/ui/Header";
+import parseDate from "@/utils/parseDate";
 
 
 export default function Conversation() {
-/*    const { userId } = useParams();
+    const params = useParams();
+    const userId = params.conversationId;
     const { data: session } = useSession();
     const [recipient, setRecipient] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    // State for the input field
+    const [inputText, setInputText] = useState("");
+    // Ref for the message container to enable auto-scrolling
     const messagesEndRef = useRef(null);
 
+    console.log("User ID from URL:", userId);
+    console.log("Session data:", session);
+    console.log("Recipient data:", recipient);
+    console.log("Messages data:", messages);
+    console.log("Loading state:", loading);
+    console.log("Input text:", inputText);
+    console.log("Messages end ref:", messagesEndRef);
+
     useEffect(() => {
+        let isMounted = true;
+
         const fetchConversation = async () => {
             try {
                 if (!session) return;
 
-                // Получение данных о собеседнике
+                // Get recipient data first
                 const userRes = await fetch(`/api/users/${userId}`);
+
+                if (!userRes.ok) {
+                    throw new Error('User not found or API error');
+                }
+
                 const userData = await userRes.json();
 
-                // Получение сообщений
-                const messagesRes = await fetch(`/api/messages/${userId}`);
-                const messagesData = await messagesRes.json();
+                if (isMounted) {
+                    setRecipient(userData);
+                }
 
-                setRecipient(userData);
-                setMessages(messagesData);
+                // Only proceed to get messages if we found the user
+                try {
+                    const messagesRes = await fetch(`/api/messages/${userId}`);
+
+                    if (messagesRes.ok) {
+                        const messagesData = await messagesRes.json();
+                        if (isMounted) {
+                            setMessages(messagesData);
+                        }
+                    }
+                } catch (messageError) {
+                    console.error('Error loading messages:', messageError);
+                    // Don't set error state here, we already have the user
+                }
+
             } catch (error) {
-                console.error('Ошибка загрузки переписки:', error);
+                console.error('Error loading conversation:', error);
+                if (isMounted) {
+                    setError('User not found');
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
 
+        setLoading(true);
+        setError(null);
         fetchConversation();
+
+        return () => {
+            isMounted = false;
+        };
     }, [session, userId]);
 
-    // Прокрутка вниз при изменении сообщений
+    // Scroll down when messages change
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSendMessage = async (e) => {
-        e.preventDefault();
-
-        if (!newMessage.trim()) return;
+    const handleSendMessage = async () => {
+        if (!inputText.trim()) return;
 
         try {
             const response = await fetch('/api/messages', {
@@ -84,178 +102,95 @@ export default function Conversation() {
                 },
                 body: JSON.stringify({
                     receiverId: userId,
-                    content: newMessage,
+                    content: inputText,
                 }),
             });
 
-            if (!response.ok) throw new Error('Ошибка отправки сообщения');
+            if (!response.ok) throw new Error('Message sending error');
 
             const data = await response.json();
             setMessages([...messages, data.message]);
-            setNewMessage('');
+            setInputText('');
         } catch (error) {
-            console.error('Ошибка отправки сообщения:', error);
+            console.error('Error sending message:', error);
         }
     };
 
-    if (loading) {
-        return <div>Загрузка...</div>;
+    // Loading screen
+    if (loading || (error || !recipient)) {
+        return (
+            <div className="flex flex-col h-screen bg-gray-100 items-center justify-center">
+                <div className="text-center p-8 rounded-lg bg-white shadow-md">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-lg font-medium text-gray-700">Loading conversation...</p>
+                </div>
+            </div>
+        );
     }
 
-    if (!recipient) {
-        return <div>Пользователь не найден</div>;
-    }*/
-
-
-    const params = useParams();
-    const conversationId = params.conversationId;
-
-    // State for the messages in the current chat
-    const [messages, setMessages] = useState([]);
-    // State for the partner's name
-    const [partnerName, setPartnerName] = useState("");
-    // State for the input field
-    const [inputText, setInputText] = useState("");
-
-    // Ref for the message container to enable auto-scrolling
-    const messagesEndRef = useRef(null);
-
-    // Fetch conversation data based on ID (simulation)
-    useEffect(() => {
-        if (conversationId && allConversations[conversationId]) {
-            setMessages(allConversations[conversationId].messages);
-            setPartnerName(allConversations[conversationId].partnerName);
-        } else {
-            // Handle conversation not found (e.g., redirect or show error)
-            setPartnerName("Unknown Chat");
-            setMessages([]);
-        }
-    }, [conversationId]); // Re-run when conversationId changes
-
-    // Scroll to the bottom whenever messages change
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
-
-
-    // Function to handle sending a message (simulation)
-    const handleSendMessage = () => {
-        if (inputText.trim() === "") return; // Don't send empty messages
-
-        const newMessage = {
-            id: Date.now(), // Simple unique ID for demo purposes
-            text: inputText,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }), // Current time
-            sender: 'self',
-        };
-
-        setMessages(prevMessages => [...prevMessages, newMessage]);
-        setInputText(""); // Clear input field
-    };
+    // Error screen (when user not found)
+    // if (error || !recipient) {
+    //     return (
+    //         <div className="flex flex-col h-screen bg-gray-100 items-center justify-center">
+    //             <div className="text-center p-8 rounded-lg bg-white shadow-md">
+    //                 <p className="text-lg font-medium text-red-500">User not found</p>
+    //                 <Link href="/messages" className="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+    //                     Back to Messages
+    //                 </Link>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     // Function to handle Enter key press in input
-    const handleKeyPress = (event) => {
+    const handleKeyPress = async (event) => {
         if (event.key === 'Enter') {
-            handleSendMessage();
+            await handleSendMessage();
         }
-    };
-
-
-    // Example function for handling exit/logout
-    const handleExit = async () => {
-        console.log("Exit clicked - implement logout logic here");
     };
 
     return (
         <div className="flex flex-col h-screen bg-gray-100">
             {/* Header */}
-            <header className="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md flex-shrink-0">
-                <div className="flex items-center space-x-2">
-                    <span className="bg-white text-blue-600 rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">SB</span>
-                    <h1 className="text-xl font-semibold">Study Buddy</h1>
-                </div>
-                <button className="bg-white text-gray-700 rounded-full h-8 w-16 flex items-center justify-center text-sm hover:bg-gray-200">
-                    User {/* Replace */}
-                </button>
-            </header>
+            <Header/>
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar */}
-                <aside className="w-64 bg-gray-50 p-4 flex flex-col justify-between border-r border-gray-200 flex-shrink-0">
-                    <nav>
-                        <ul>
-                            <li className="mb-2">
-                                <Link href="/dashboard" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Dashboard
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/partners" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Partners
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/courses" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Courses
-                                </Link>
-                            </li>
-                            {/* Active state applied to Messages */}
-                            <li className="mb-2">
-                                <Link href="/messages" className="flex items-center p-2 rounded-md bg-blue-100 text-blue-700 font-semibold">
-                                    <span className="mr-3 h-5 w-5"></span> Messages
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/profile" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> Profile
-                                </Link>
-                            </li>
-                            <li className="mb-2">
-                                <Link href="/about" className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-200">
-                                    <span className="mr-3 h-5 w-5"></span> About Project
-                                </Link>
-                            </li>
-                        </ul>
-                    </nav>
-                    {/* Exit Button */}
-                    <div>
-                        <button
-                            onClick={handleExit}
-                            className="w-full flex items-center justify-center p-2 rounded-md text-red-700 bg-red-100 hover:bg-red-200 font-medium"
-                        >
-                            <span className="mr-3 h-5 w-5"></span> Exit
-                        </button>
-                    </div>
-                </aside>
+                <Sidebar activePage={"/messages"}/>
 
                 {/* Main Content - Chat Interface */}
                 <main className="flex-1 flex flex-col bg-white overflow-hidden">
                     {/* Chat Header */}
                     <div className="p-4 border-b border-gray-200 flex-shrink-0">
                         <h2 className="text-xl font-semibold text-gray-800">
-                            Chat with {partnerName}
+                            Chat with {recipient.name}
                         </h2>
                     </div>
 
                     {/* Message Area */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                        {messages.map((msg) => (
-                            <div key={msg.id} className={`flex ${msg.sender === 'self' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-lg shadow-sm ${
-                                    msg.sender === 'self'
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-200 text-gray-800'
-                                }`}
-                                >
-                                    <p className="text-sm">{msg.text}</p>
-                                    <p className={`text-xs mt-1 ${
-                                        msg.sender === 'self' ? 'text-blue-200 text-right' : 'text-gray-500 text-right'
-                                    }`}>
-                                        {msg.timestamp}
-                                    </p>
+                        {messages.map((msg) => {
+                            // Check if the current user is the sender
+                            const isCurrentUserSender = session?.user?.id === msg.senderId;
+
+                            return (
+                                <div key={msg.id} className={`flex ${isCurrentUserSender ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-lg shadow-sm ${
+                                        isCurrentUserSender
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-gray-200 text-gray-800'
+                                    }`}
+                                    >
+                                        <p className="text-sm">{msg.content}</p>
+                                        <p className={`text-xs mt-1 ${
+                                            isCurrentUserSender ? 'text-blue-200 text-right' : 'text-gray-500 text-right'
+                                        }`}>
+                                            {parseDate(msg.createdAt)}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {/* Empty div to mark the end of messages for auto-scrolling */}
                         <div ref={messagesEndRef} />
                     </div>

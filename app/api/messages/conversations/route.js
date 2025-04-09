@@ -1,4 +1,3 @@
-// app/api/messages/conversations/route.js - Получение списка бесед
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
@@ -9,14 +8,14 @@ export async function GET() {
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json(
-                { message: 'Не авторизован' },
+                { message: 'Not authorized' },
                 { status: 401 }
             );
         }
 
         const currentUserId = session.user.id;
 
-        // Находим всех пользователей, с которыми текущий пользователь обменивался сообщениями
+        // Find all users with whom the current user has exchanged messages
         const sentMessages = await prisma.message.findMany({
             where: {
                 senderId: currentUserId,
@@ -55,10 +54,10 @@ export async function GET() {
             },
         });
 
-        // Создаем Map для хранения последних сообщений по каждому пользователю
+        // Create a Map to store the latest messages for each user
         const conversationsMap = new Map();
 
-        // Добавляем отправленные сообщения
+        // Add sent messages
         for (const message of sentMessages) {
             const userId = message.receiverId;
 
@@ -72,7 +71,7 @@ export async function GET() {
             }
         }
 
-        // Добавляем полученные сообщения
+        // Add received messages
         for (const message of receivedMessages) {
             const userId = message.senderId;
 
@@ -86,15 +85,15 @@ export async function GET() {
             }
         }
 
-        // Преобразуем Map в массив и сортируем по дате последнего сообщения (сначала новые)
+        // Convert Map to array and sort by the date of the last message (newest first)
         const conversations = Array.from(conversationsMap.values())
             .sort((a, b) => new Date(b.lastMessageDate) - new Date(a.lastMessageDate));
 
         return NextResponse.json(conversations);
     } catch (error) {
-        console.error('Ошибка получения бесед:', error);
+        console.error('Error getting conversations:', error);
         return NextResponse.json(
-            { message: 'Произошла ошибка при получении списка бесед' },
+            { message: 'An error occurred while retrieving the list of conversations' },
             { status: 500 }
         );
     }

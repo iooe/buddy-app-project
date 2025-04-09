@@ -1,5 +1,3 @@
-
-// app/api/messages/[userId]/route.js - Получение переписки с пользователем
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
@@ -10,15 +8,16 @@ export async function GET(request, { params }) {
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json(
-                { message: 'Не авторизован' },
+                { message: 'Not authorized' },
                 { status: 401 }
             );
         }
 
-        const { userId } = params;
+        // Access userId directly without destructuring
+        const userId = params.userId;
         const currentUserId = session.user.id;
 
-        // Получаем сообщения в обоих направлениях
+        // Get messages in both directions
         const messages = await prisma.message.findMany({
             where: {
                 OR: [
@@ -39,11 +38,10 @@ export async function GET(request, { params }) {
 
         return NextResponse.json(messages);
     } catch (error) {
-        console.error('Ошибка получения сообщений:', error);
+        console.error('Error retrieving messages:', error);
         return NextResponse.json(
-            { message: 'Произошла ошибка при получении сообщений' },
+            { message: 'An error occurred while retrieving messages' },
             { status: 500 }
         );
     }
 }
-

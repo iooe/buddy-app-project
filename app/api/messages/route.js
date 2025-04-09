@@ -1,5 +1,3 @@
-
-// app/api/messages/route.js - Отправка сообщений
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
@@ -10,7 +8,7 @@ export async function POST(request) {
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json(
-                { message: 'Не авторизован' },
+                { message: 'Not authorized' },
                 { status: 401 }
             );
         }
@@ -20,12 +18,12 @@ export async function POST(request) {
 
         if (!receiverId || !content) {
             return NextResponse.json(
-                { message: 'Не указаны обязательные поля' },
+                { message: 'Required fields not specified' },
                 { status: 400 }
             );
         }
 
-        // Проверка существования получателя
+        // Check if recipient exists
         const receiver = await prisma.user.findUnique({
             where: {
                 id: receiverId,
@@ -34,12 +32,12 @@ export async function POST(request) {
 
         if (!receiver) {
             return NextResponse.json(
-                { message: 'Получатель не найден' },
+                { message: 'Recipient not found' },
                 { status: 404 }
             );
         }
 
-        // Создание сообщения
+        // Create message
         const message = await prisma.message.create({
             data: {
                 content,
@@ -50,9 +48,9 @@ export async function POST(request) {
 
         return NextResponse.json({ message });
     } catch (error) {
-        console.error('Ошибка отправки сообщения:', error);
+        console.error('Error sending message:', error);
         return NextResponse.json(
-            { message: 'Произошла ошибка при отправке сообщения' },
+            { message: 'An error occurred while sending the message' },
             { status: 500 }
         );
     }

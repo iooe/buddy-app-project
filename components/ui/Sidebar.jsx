@@ -4,6 +4,7 @@ import {usePathname, useRouter} from "next/navigation";
 
 export default function Sidebar({activePage}) {
     const pathname = usePathname();
+    const router = useRouter();
 
     // Define navigation items with paths
     const navItems = [
@@ -44,7 +45,7 @@ export default function Sidebar({activePage}) {
     };
 
     return (
-        <div className="w-48 bg-white min-h-screen">
+        <div className="w-48 bg-white max-h-screen">
             <nav className="py-4 flex flex-col h-full">
                 {navItems.map((item) => (
                     <Link
@@ -66,7 +67,6 @@ export default function Sidebar({activePage}) {
                         className="w-full bg-red-100 text-red-500 py-2 rounded hover:bg-red-200 transition-colors duration-200">
                         Exit
                     </button>
-
                 </div>
             </nav>
         </div>
