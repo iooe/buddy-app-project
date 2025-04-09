@@ -13,30 +13,43 @@ export const authOptions = {
             },
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) {
-                    return null;
+                    throw new Error("Please enter both email and password");
                 }
 
-                const user = await prisma.user.findUnique({
-                    where: {
-                        email: credentials.email,
-                    },
-                });
+                try {
+                    const user = await prisma.user.findUnique({
+                        where: {
+                            email: credentials.email,
+                        },
+                    });
 
-                if (!user) {
-                    return null;
+                    if (!user) {
+                        throw new Error("No account found with this email");
+                    }
+
+                    const isPasswordValid = await compare(credentials.password, user.password);
+
+                    if (!isPasswordValid) {
+                        throw new Error("Incorrect password");
+                    }
+
+                    return {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                    };
+                } catch (error) {
+                    // Check if it's our custom error or a database/system error
+                    if (error.message === "No account found with this email" ||
+                        error.message === "Incorrect password" ||
+                        error.message === "Please enter both email and password") {
+                        throw error;
+                    } else {
+                        // For other errors (database issues, etc.), provide a generic message
+                        console.error("Auth error:", error);
+                        throw new Error("Authentication failed. Please try again later.");
+                    }
                 }
-
-                const isPasswordValid = await compare(credentials.password, user.password);
-
-                if (!isPasswordValid) {
-                    return null;
-                }
-
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                };
             },
         }),
     ],
@@ -66,12 +79,3 @@ export const authOptions = {
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
-
-
-
-
-
-
-
-
-
