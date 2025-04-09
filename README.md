@@ -35,7 +35,7 @@ A web application for university students to find study partners, connect with p
 3. Set up environment variables:
    Create a `.env` file in the root directory with your database connection string:
    ```
-   DATABASE_URL="postgresql://username:password@localhost:5432/study_buddy_db"
+   DATABASE_URL="postgresql://username:password@localhost:5432/study_buddy_db?schema=public"
    NEXTAUTH_SECRET="your-nextauth-secret"
    NEXTAUTH_URL="http://localhost:3000"
    ```
